@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html manifest="wsdemo.manifest">
+<head>
+<meta name="viewport" content="width=device-width">
+<title>WebSQL Example</title>
+<link rel="stylesheet" type="text/css" href="default.css" media="all" />
+<script src="jquery-1.7.2.min.js"></script>
+</head>
+<body>
+<div class="header">
+	<h1>WebSQL Example</h1>
+    <h3 id="status"></h3>
+    <div class="addbar">
+    	<input type="text" name="adddata" id="adddata" /> 
+        <a id="addbtn"><img src="add_small.png" alt="" border="0" /></a>
+    </div>
+    <p><a id="clearbtn">Clear all items in list</a></p>
+	<p>This is a simple list where you can add and delete items from the list either offline or with internet connection<br />
+    <small>Please use Chrome or Safari as WebSQL is not supported on all browsers</small></p>
+</div>
+<div class="tophalf">
+    <div class="listcontainer">
+    </div>
+</div>
+<div class="bottomhalf">
+	<h2>Data Saved locally</h2>
+    <ul id="localdata">
+    </ul>
+</div>
+<script type="text/javascript">
+$(document).ready(function() {
+	var itemCount = 0; // default value for label
+	try {
+		var db = openDatabase('mydb', '1.0', 'my_data', 2 * 1024 * 1024);
+		db.transaction(function (tx) {
+			tx.executeSql('CREATE TABLE IF NOT EXISTS data (id unique, text)');
+		});
+	} catch( error ) {
+		alert('Your browser is not supported for WebSQL - Please use Chrome or Safari');
+	}
+	var savedData = [];
+
+	window.addEventListener("DOMContentLoaded", loadSavedData, false);// load locally saved data when the page opens
+	
+	// get the locally saved data
+	function loadSavedData(){
+		db.transaction(function (tx) {
+			tx.executeSql('SELECT * FROM data', [], function (tx, results) {
+				console.log(results);
+				var len = results.rows.length, i;
+				for (i = 0; i < len; i++) {
+					var saveItem = {
+						"value": results.rows.item(i).text,
+						"label": results.rows.item(i).id
+					};
+					itemCount++; // increase labelname by 1
+					savedData.push(saveItem);
+			  	}
+			  
+				// don't run html display until the query has been fully executed
+				showListItems();// Generate the list items and display
+				showLocalData();// show data
+			});
+			console.log(savedData);
+		});
+	}	
+	
+	// Click function when adding new items to the list
+	$('#addbtn').on('click', function() {
+		if ($('#adddata').val() != ''){
+			// generate the object
+			var saveItem = {
+				"value": $('#adddata').val(),
+				"label": itemCount
+			};
+			itemCount++; // increase labelname by 1
+			savedData.push(saveItem); // push new object to savedData
+			saveLocally(savedData); // save the new data locally
+			$('#adddata').val(''); // clear field
+		}
+	});
+	
+	// Click function when deleting items from the list
+	$('.delbtn').live('click', function() {
+		var delListItem = $(this).parent().attr('id'); // get the id of the item deleted
+		delete savedData[delListItem.substring(1)]; // delete that item from DOM element
+		saveLocally(savedData); // update local saved data
+	});
+	
+	// clear local data saved
+	$('#clearbtn').on('click', function() {
+		savedData = []; // clear data in object
+		saveLocally(savedData);
+		itemCount = 0; // label names back to 0
+	});
+	
+	// save the new list locally
+	function saveLocally(dataToSave){
+		db.transaction(function (tx) { // this is nasty but truncate is not available on sqllite
+			tx.executeSql('DROP TABLE data ');
+			tx.executeSql('CREATE TABLE IF NOT EXISTS data (id unique, text)');
+		});
+		$.each(dataToSave, function(key, val) { // loop through each item in savedData
+			if (val){
+				db.transaction(function (tx) {
+					tx.executeSql('INSERT INTO data (id, text) VALUES (?, ?)', [val['label'], val['value']]);
+				});
+			}
+		});
+		showListItems(); // refresh the list display
+		showLocalData(); // update localdata display
+	}
+	
+	// show list items
+	function showListItems(){
+		var listContent = ''; // resect the list content to blank
+		$.each(savedData, function(key, val) { // loop through each item in savedData
+			if (val){
+				listContent += '<div id="a' + val['label'] + '" class="listitem">' + val['value'] + ' <a class="delbtn"><img src="icon_delete_small.png" alt="" border="0" /></a></div>'; // create html for each element
+				if (val['label'] >= itemCount){ itemCount = val['label']+1;} // if itemCount is smaller than saved labels reassign to higher number
+			}
+		});
+		$('.listcontainer').html(listContent); // add new html to the page
+		
+		// display if they are online or not
+		if (!navigator.onLine){
+			$('#status').html('Offline');
+		} else {
+			$('#status').html('Online');
+		}
+	}
+	
+	// show data that is stored locally
+	function showLocalData(){
+		var bottomContent = ''; // resect the bottom content to blank
+		$.each(savedData, function(key, val) { // loop through each item in savedData
+			if (val){
+				bottomContent += '<li>' + val['label'] + ': ' + val['value'] + '</li>'; // create html for each element
+			}
+		});
+		$('#localdata').html(bottomContent); // add new html to the page
+	}
+	
+});
+</script>
+</body>
+</html>

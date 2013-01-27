@@ -1,0 +1,44 @@
+@charset "utf-8";
+/* CSS Document */
+html, body { height: 100%; width: 100%; margin: 0; }
+body{
+	font:14px Arial, Helvetica, sans-serif;
+	background:#CBF1FE;
+	color:#444444;
+}
+.header{
+	height:40%;
+	padding:0px 20px 20px 20px;
+	overflow: scroll;
+}
+.tophalf{
+	height:30%;
+	background-color:#FFFFFF;
+	padding:20px;
+	display: block;
+	overflow: scroll;
+}
+.bottomhalf{
+	height:30%;
+	background-color:#CDCDCD;
+	padding:20px;
+	display: block;
+	overflow: scroll;
+}
+#addbtn, .delbtn{
+	cursor:pointer;
+}
+#clearbtn{
+	cursor:pointer;
+	color:#CC3333;
+	font-weight:600;
+	text-decoration:underline;
+}
+.listcontainer{
+	padding:10px;
+}
+.listitem{
+	padding:4px;
+	margin:4px;
+	
+}

@@ -1,0 +1,8 @@
+CACHE MANIFEST
+# Place all files below that need to be saved offline
+CACHE:
+index.html
+default.css
+add_small.png
+icon_delete_small.png
+jquery-1.7.2.min.js
